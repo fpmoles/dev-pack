@@ -9,6 +9,12 @@ below and produce a structured report.
 
 ## Conventions to enforce
 
+### Compatibility baseline
+
+- Treat **Bash 3.2 on macOS** as the required compatibility baseline
+- Syntax that works on Bash 4+ is acceptable only if it also works on Bash 3.2
+- Flag Bash 4+-only syntax unless the script explicitly documents a newer Bash requirement
+
 ### Structure checks
 
 | # | Check | Rule |
@@ -35,6 +41,8 @@ below and produce a structured report.
 | C5 | Function naming | Functions must use lower_snake_case |
 | C6 | Error handling | Errors must use the `error` helper before `exit 1`; never silent failures |
 | C7 | Inline error handling | Pipeline/command failures must use `|| { error "msg"; exit 1; }` |
+| C8 | Bash compatibility | Must avoid Bash 4+-only syntax such as `${var,,}`, `${var^^}`, `declare -A`, `mapfile`, `readarray`, `local -n`, `coproc`, and `globstar` unless a newer Bash requirement is clearly documented |
+| C9 | `set -e` safe control flow | Prefer explicit `if` / `case` blocks over standalone `[[ ... ]] && ...` patterns when a false condition is expected during normal execution |
 
 ### Output helper checks
 
@@ -52,23 +60,25 @@ below and produce a structured report.
 
 2. **Check every rule** listed above against the script's actual content.
 
-3. **For each check that passes**, report:
+3. **Enforce the compatibility baseline** by looking specifically for Bash 4+-only syntax and for terse control-flow patterns that are risky under `set -e` on older Bash versions.
+
+4. **For each check that passes**, report:
    - ✅ `[S1]` Shebang is correct
 
-4. **For each check that fails**, report:
+5. **For each check that fails**, report:
    - ❌ `[S2]` Safety flags missing
    - 💡 Add `set -euo pipefail` immediately after the shebang line
 
-5. **For each check that is not applicable** (e.g. S9 when no external tools are used), report:
+6. **For each check that is not applicable** (e.g. S9 when no external tools are used), report:
    - ➖ `[S9]` No external tools used — dependency check not required
 
-6. **Produce a summary** at the end:
+7. **Produce a summary** at the end:
    - Checks passed: X
    - Checks failed: Y
    - Not applicable: Z
    - Overall result: **PASS** or **FAIL**
 
-7. **If the script passes all applicable checks**, confirm it follows the project conventions
+8. **If the script passes all applicable checks**, confirm it follows the project conventions
    and is ready to use.
 
 ## Output format
@@ -86,6 +96,8 @@ below and produce a structured report.
 ✅ [C1] All variable expansions are double-quoted
 ❌ [C2] Uses [ ] instead of [[ ]] on line 34
    💡 Replace `[ "$VAR" = "value" ]` with `[[ "$VAR" = "value" ]]`
+❌ [C8] Uses `${answer,,}` on line 57, which requires Bash 4+
+   💡 Replace the lowercase conversion with a `case` match such as `case "$answer" in [Yy]|[Yy][Ee][Ss]) ... ;; esac`
 
 ### Output Helpers
 ✅ [O1] Colour variables defined as readonly

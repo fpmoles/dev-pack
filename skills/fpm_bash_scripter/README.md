@@ -1,6 +1,7 @@
 # fpm_bash_scripter Skill
 
-A skill for generating and validating bash scripts against the project's standard conventions.
+A skill for generating and validating bash scripts against the project's standard conventions,
+with Bash syntax that works on macOS system Bash 3.2 and remains valid on Bash 4+.
 
 ---
 
@@ -41,6 +42,29 @@ Using #validate_script, validate #<script_file>
 ## Conventions
 
 Every script in this project must follow these rules:
+
+### Bash compatibility baseline
+
+- Target **Bash 3.2 compatibility first** because that is the default Bash on many macOS systems
+- Only use syntax that also works unchanged on Bash 4+
+- Prefer portable Bash patterns such as `case`, indexed arrays, and `while IFS= read -r`
+- Avoid Bash 4+-only features unless the user explicitly requires them and a compatible fallback is provided
+
+#### Avoid these Bash 4+-only features by default
+
+- `${var,,}` and `${var^^}` case conversion
+- `declare -A` associative arrays
+- `mapfile` / `readarray`
+- `local -n` namerefs
+- `coproc`
+- `globstar` (`**`) patterns that require `shopt -s globstar`
+
+#### Prefer these compatible alternatives
+
+- Use `case` for case-insensitive yes/no handling instead of `${var,,}`
+- Use indexed arrays or newline-delimited loops instead of associative arrays
+- Use `while IFS= read -r line; do ...; done` instead of `mapfile`
+- Use explicit `if` statements for optional logging and branching instead of terse Bash-version-sensitive shortcuts when `set -e` is enabled
 
 ### Structure
 
@@ -104,6 +128,7 @@ main "$@"
 - Use `[[ ]]` for conditionals, not `[ ]`
 - Use `local` for all variables inside functions
 - Use `|| { error "msg"; exit 1; }` for inline error handling
+- Prefer explicit `if` blocks over standalone `[[ ... ]] && ...` when a false condition is expected during normal execution
 - Send errors to stderr via the `error` helper
 - Use 2-space indentation
 - Functions use lower_snake_case naming
