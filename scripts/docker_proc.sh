@@ -47,11 +47,13 @@ readonly SUPPORTED_COMMANDS=("start" "stop")
 # ---------------------------------------------------------------------------
 
 readonly POSTGRESQL_CONTAINER="docker_postgresql"
-readonly POSTGRESQL_IMAGE="postgres:latest"
+# Pin a stable default major; callers can override via POSTGRESQL_IMAGE env var.
+readonly POSTGRESQL_IMAGE="${POSTGRESQL_IMAGE:-postgres:18}"
 readonly POSTGRESQL_PORT="5432"
 readonly POSTGRESQL_USER="postgres"
 readonly POSTGRESQL_PASSWORD="postgres"
 readonly POSTGRESQL_DB="local"
+readonly POSTGRESQL_PGDATA="/var/lib/postgresql/data/pgdata"
 
 # ---------------------------------------------------------------------------
 # Swagger UI Configuration
@@ -252,6 +254,7 @@ start_postgresql() {
       --env POSTGRES_USER="${POSTGRESQL_USER}" \
       --env POSTGRES_PASSWORD="${POSTGRESQL_PASSWORD}" \
       --env POSTGRES_DB="${POSTGRESQL_DB}" \
+      --env PGDATA="${POSTGRESQL_PGDATA}" \
       --volume "${data_dir}:/var/lib/postgresql/data" \
       --restart unless-stopped \
       "${POSTGRESQL_IMAGE}"
@@ -359,5 +362,3 @@ main() {
 }
 
 main "$@"
-
-
