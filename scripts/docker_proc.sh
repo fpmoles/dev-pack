@@ -12,7 +12,7 @@ set -euo pipefail
 #
 # Supported tools:
 #   postgresql     PostgreSQL database server
-#   swagger-ui     Swagger UI API explorer
+#   swagger-editor Swagger Editor
 #   all            All supported tools
 # ---------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 # Constants
 # ---------------------------------------------------------------------------
 
-readonly SUPPORTED_TOOLS=("postgresql" "swagger-ui" "all")
+readonly SUPPORTED_TOOLS=("postgresql" "swagger-editor" "all")
 readonly SUPPORTED_COMMANDS=("start" "stop")
 
 # ---------------------------------------------------------------------------
@@ -56,14 +56,13 @@ readonly POSTGRESQL_DB="local"
 readonly POSTGRESQL_PGDATA="/var/lib/postgresql/data/pgdata"
 
 # ---------------------------------------------------------------------------
-# Swagger UI Configuration
-# (Swagger UI is stateless — no persistent data directory required)
+# Swagger Editor Configuration
+# (Swagger Editor is stateless — no persistent data directory required)
 # ---------------------------------------------------------------------------
 
-readonly SWAGGER_UI_CONTAINER="docker_swagger-ui"
-readonly SWAGGER_UI_IMAGE="swaggerapi/swagger-ui:latest"
-readonly SWAGGER_UI_PORT="8080"
-readonly SWAGGER_UI_URL="https://petstore.swagger.io/v2/swagger.json"
+readonly SWAGGER_EDITOR_CONTAINER="docker_swagger-editor"
+readonly SWAGGER_EDITOR_IMAGE="swaggerapi/swagger-editor:latest"
+readonly SWAGGER_EDITOR_PORT="8080"
 
 # ---------------------------------------------------------------------------
 # Data Directory Resolution
@@ -102,7 +101,7 @@ Commands:
 
 Supported tools:
   postgresql     PostgreSQL ${POSTGRESQL_IMAGE} on port ${POSTGRESQL_PORT}
-  swagger-ui     Swagger UI ${SWAGGER_UI_IMAGE} on port ${SWAGGER_UI_PORT}
+  swagger-editor Swagger Editor ${SWAGGER_EDITOR_IMAGE} on port ${SWAGGER_EDITOR_PORT}
   all            Apply command to all supported tools
 
 Options:
@@ -283,49 +282,48 @@ stop_postgresql() {
 }
 
 # ---------------------------------------------------------------------------
-# Tool: Swagger UI
+# Tool: Swagger Editor
 # ---------------------------------------------------------------------------
 
-start_swagger_ui() {
-  info "Starting Swagger UI..."
+start_swagger_editor() {
+  info "Starting Swagger Editor..."
 
-  if container_running "${SWAGGER_UI_CONTAINER}"; then
-    warn "Container '${SWAGGER_UI_CONTAINER}' is already running — skipping."
+  if container_running "${SWAGGER_EDITOR_CONTAINER}"; then
+    warn "Container '${SWAGGER_EDITOR_CONTAINER}' is already running — skipping."
     return
   fi
 
-  if container_exists "${SWAGGER_UI_CONTAINER}"; then
-    info "Restarting existing container '${SWAGGER_UI_CONTAINER}'..."
-    docker start "${SWAGGER_UI_CONTAINER}"
+  if container_exists "${SWAGGER_EDITOR_CONTAINER}"; then
+    info "Restarting existing container '${SWAGGER_EDITOR_CONTAINER}'..."
+    docker start "${SWAGGER_EDITOR_CONTAINER}"
   else
-    [[ "${VERBOSE}" == true ]] && info "Pulling image ${SWAGGER_UI_IMAGE}..."
-    docker pull "${SWAGGER_UI_IMAGE}"
+    [[ "${VERBOSE}" == true ]] && info "Pulling image ${SWAGGER_EDITOR_IMAGE}..."
+    docker pull "${SWAGGER_EDITOR_IMAGE}"
 
     docker run \
       --detach \
-      --name "${SWAGGER_UI_CONTAINER}" \
-      --publish "${SWAGGER_UI_PORT}:8080" \
-      --env SWAGGER_JSON_URL="${SWAGGER_UI_URL}" \
+      --name "${SWAGGER_EDITOR_CONTAINER}" \
+      --publish "${SWAGGER_EDITOR_PORT}:80" \
       --restart unless-stopped \
-      "${SWAGGER_UI_IMAGE}"
+      "${SWAGGER_EDITOR_IMAGE}"
   fi
 
-  success "Swagger UI started."
-  info  "  Container : ${SWAGGER_UI_CONTAINER}"
-  info  "  URL       : http://localhost:${SWAGGER_UI_PORT}"
-  info  "  Stop with : ${SCRIPT_NAME} stop swagger-ui"
+  success "Swagger Editor started."
+  info  "  Container : ${SWAGGER_EDITOR_CONTAINER}"
+  info  "  URL       : http://localhost:${SWAGGER_EDITOR_PORT}"
+  info  "  Stop with : ${SCRIPT_NAME} stop swagger-editor"
 }
 
-stop_swagger_ui() {
-  info "Stopping Swagger UI..."
+stop_swagger_editor() {
+  info "Stopping Swagger Editor..."
 
-  if ! container_running "${SWAGGER_UI_CONTAINER}"; then
-    warn "Container '${SWAGGER_UI_CONTAINER}' is not running — skipping."
+  if ! container_running "${SWAGGER_EDITOR_CONTAINER}"; then
+    warn "Container '${SWAGGER_EDITOR_CONTAINER}' is not running — skipping."
     return
   fi
 
-  docker stop "${SWAGGER_UI_CONTAINER}"
-  success "Swagger UI stopped (container '${SWAGGER_UI_CONTAINER}' preserved)."
+  docker stop "${SWAGGER_EDITOR_CONTAINER}"
+  success "Swagger Editor stopped (container '${SWAGGER_EDITOR_CONTAINER}' preserved)."
 }
 
 # ---------------------------------------------------------------------------
@@ -336,16 +334,16 @@ dispatch() {
   case "${COMMAND}" in
     start)
       case "${TOOL}" in
-        postgresql)  start_postgresql ;;
-        swagger-ui)  start_swagger_ui ;;
-        all)         start_postgresql; start_swagger_ui ;;
+        postgresql)     start_postgresql ;;
+        swagger-editor) start_swagger_editor ;;
+        all)            start_postgresql; start_swagger_editor ;;
       esac
       ;;
     stop)
       case "${TOOL}" in
-        postgresql)  stop_postgresql ;;
-        swagger-ui)  stop_swagger_ui ;;
-        all)         stop_postgresql; stop_swagger_ui ;;
+        postgresql)     stop_postgresql ;;
+        swagger-editor) stop_swagger_editor ;;
+        all)            stop_postgresql; stop_swagger_editor ;;
       esac
       ;;
   esac

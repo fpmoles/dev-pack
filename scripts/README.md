@@ -52,11 +52,11 @@ docker_proc [OPTIONS] <start|stop> <tool>
 
 **Supported tools**
 
-| Tool          | Image                      | Port   |
-|---------------|----------------------------|--------|
-| `postgresql`  | `postgres:18` (default)    | `5432` |
-| `swagger-ui`  | `swaggerapi/swagger-ui:latest` | `8080` |
-| `all`         | All tools above            | —      |
+| Tool             | Image                              | Port   |
+|------------------|------------------------------------|--------|
+| `postgresql`     | `postgres:18` (default)            | `5432` |
+| `swagger-editor` | `swaggerapi/swagger-editor:latest` | `8080` |
+| `all`            | All tools above                    | —      |
 
 **Examples**
 
@@ -64,8 +64,8 @@ docker_proc [OPTIONS] <start|stop> <tool>
 # Start PostgreSQL
 docker_proc start postgresql
 
-# Stop Swagger UI
-docker_proc stop swagger-ui
+# Start Swagger Editor
+docker_proc start swagger-editor
 
 # Start all tools
 docker_proc start all
